@@ -5,6 +5,7 @@ import { chatReducer } from '../lib/chat-state'
 import { loadChats, saveChats } from '../lib/storage'
 import type { Credentials, Message } from '../types'
 import { ChatPanel } from './ChatPanel'
+import { ReceivingNotice } from './ReceivingNotice'
 import { Sidebar } from './Sidebar'
 
 const createLocalId = () => `local-${Date.now()}-${Math.random().toString(36).slice(2)}`
@@ -67,7 +68,9 @@ export function Messenger({ credentials, onLogout }: Props) {
         onSelect={setActiveChatId}
         onCreate={openChat}
         onLogout={onLogout}
-      />
+      >
+        <ReceivingNotice credentials={credentials} />
+      </Sidebar>
       <ChatPanel
         className={activeChat ? 'flex' : 'hidden md:flex'}
         chat={activeChat}

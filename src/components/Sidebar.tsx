@@ -1,5 +1,5 @@
 import { PencilSimpleLineIcon, SignOutIcon } from '@phosphor-icons/react'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import type { Chat, Message } from '../types'
 import { ChatListItem } from './ChatListItem'
 import { IconButton } from './IconButton'
@@ -14,9 +14,10 @@ interface Props {
   readonly onSelect: (chatId: string) => void
   readonly onCreate: (phone: string) => Promise<void>
   readonly onLogout: () => void
+  readonly children?: ReactNode
 }
 
-export function Sidebar({ className, chats, messages, activeChatId, online, onSelect, onCreate, onLogout }: Props) {
+export function Sidebar({ className, chats, messages, activeChatId, online, onSelect, onCreate, onLogout, children }: Props) {
   const [creating, setCreating] = useState(false)
 
   const create = async (phone: string) => {
@@ -36,6 +37,7 @@ export function Sidebar({ className, chats, messages, activeChatId, online, onSe
           Нет соединения с GREEN-API, переподключаемся…
         </p>
       )}
+      {children}
       {creating && <NewChatForm onCreate={create} onCancel={() => setCreating(false)} />}
       {chats.length === 0 && !creating && (
         <div className="px-6 py-10 text-center text-[15px] text-secondary">

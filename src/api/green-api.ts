@@ -48,6 +48,26 @@ export function getStateInstance(creds: Credentials): Promise<{ stateInstance: s
   return call(creds, 'getStateInstance')
 }
 
+export interface InstanceSettings {
+  readonly webhookUrl: string
+  readonly incomingWebhook: string
+}
+
+export type ReceivingProblem = 'webhook' | 'disabled'
+
+export function getSettings(creds: Credentials): Promise<InstanceSettings> {
+  return call(creds, 'getSettings')
+}
+
+export function enableIncomingWebhook(creds: Credentials): Promise<{ saveSettings: boolean }> {
+  return post(creds, 'setSettings', { incomingWebhook: 'yes' })
+}
+
+export function receivingProblem({ webhookUrl, incomingWebhook }: InstanceSettings): ReceivingProblem | null {
+  if (webhookUrl) return 'webhook'
+  return incomingWebhook === 'yes' ? null : 'disabled'
+}
+
 export function checkAccount(creds: Credentials, phone: string): Promise<{ exist: boolean; chatId: string }> {
   return post(creds, 'checkAccount', { phoneNumber: Number(phone) })
 }

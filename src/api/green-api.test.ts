@@ -1,5 +1,17 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { ApiError, checkAccount, deleteNotification, deriveApiUrl, errorMessage, getStateInstance, receiveNotification, sendMessage } from './green-api'
+import {
+  ApiError,
+  checkAccount,
+  deleteNotification,
+  deriveApiUrl,
+  enableIncomingWebhook,
+  errorMessage,
+  getSettings,
+  getStateInstance,
+  receiveNotification,
+  receivingProblem,
+  sendMessage,
+} from './green-api'
 
 describe('deriveApiUrl', () => {
   it('uses the first four digits of idInstance', () => {
@@ -23,7 +35,7 @@ describe('requests', () => {
     vi.unstubAllGlobals()
   })
 
-  it('calls all five endpoints with correct URLs and methods', async () => {
+  it('calls all seven endpoints with correct URLs and methods', async () => {
     const fetchMock = vi.fn(async () => new Response('{}'))
     vi.stubGlobal('fetch', fetchMock)
 
@@ -31,6 +43,19 @@ describe('requests', () => {
 
     await getStateInstance(creds)
     expect(fetchMock).toHaveBeenCalledWith('https://3100.api.green-api.com/waInstance3100000001/getStateInstance/tok', {})
+
+    await getSettings(creds)
+    expect(fetchMock).toHaveBeenCalledWith('https://3100.api.green-api.com/waInstance3100000001/getSettings/tok', {})
+
+    await enableIncomingWebhook(creds)
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://3100.api.green-api.com/waInstance3100000001/setSettings/tok',
+      expect.objectContaining({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ incomingWebhook: 'yes' }),
+      }),
+    )
 
     await checkAccount(creds, '79991234567')
     expect(fetchMock).toHaveBeenCalledWith(
@@ -85,5 +110,16 @@ describe('requests', () => {
     vi.stubGlobal('fetch', fetchMockNull)
     const resultNull = await receiveNotification(creds, new AbortController().signal)
     expect(resultNull).toBeNull()
+  })
+})
+
+describe('receivingProblem', () => {
+  it.each([
+    [{ webhookUrl: '', incomingWebhook: 'yes' }, null],
+    [{ webhookUrl: '', incomingWebhook: 'no' }, 'disabled'],
+    [{ webhookUrl: 'https://example.com/hook', incomingWebhook: 'yes' }, 'webhook'],
+    [{ webhookUrl: 'https://example.com/hook', incomingWebhook: 'no' }, 'webhook'],
+  ] as const)('%o -> %s', (settings, expected) => {
+    expect(receivingProblem(settings)).toBe(expected)
   })
 })
