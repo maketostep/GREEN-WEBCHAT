@@ -13,6 +13,7 @@ export type ChatAction =
   | { readonly type: 'messageSent'; readonly id: string }
   | { readonly type: 'messageFailed'; readonly id: string; readonly error: string }
   | { readonly type: 'messageRetried'; readonly id: string }
+  | { readonly type: 'stateReplaced'; readonly state: ChatState }
 
 function upsertChat(chats: readonly Chat[], chat: Chat): readonly Chat[] {
   const existing = chats.find((c) => c.chatId === chat.chatId)
@@ -50,6 +51,8 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
       return { ...state, messages: patchMessage(state.messages, action.id, { status: undefined, error: undefined }) }
     case 'messageFailed':
       return { ...state, messages: patchMessage(state.messages, action.id, { status: 'failed', error: action.error }) }
+    case 'stateReplaced':
+      return action.state
     case 'messageRetried':
       return { ...state, messages: patchMessage(state.messages, action.id, { status: 'pending', error: undefined }) }
   }

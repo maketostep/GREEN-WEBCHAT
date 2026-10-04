@@ -11,7 +11,13 @@ export function useNotifications(creds: Credentials, dispatch: Dispatch<ChatActi
     const controller = new AbortController()
     const onMessage = ({ idMessage, chatId, chatName, text, timestamp }: IncomingText) =>
       dispatch({ type: 'messageAdded', chatName, message: { id: idMessage, chatId, text, timestamp, outgoing: false } })
-    void pollNotifications(creds, controller.signal, onMessage, setOnline)
+    const poll = () => pollNotifications(creds, controller.signal, onMessage, setOnline)
+    const run = navigator.locks
+      ? navigator.locks.request(`green-chat:poll:${creds.idInstance}`, { signal: controller.signal }, poll)
+      : poll()
+    run.catch((error: unknown) => {
+      if (!(error instanceof DOMException && error.name === 'AbortError')) console.error(error)
+    })
     return () => controller.abort()
   }, [creds, dispatch])
 

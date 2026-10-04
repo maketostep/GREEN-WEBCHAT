@@ -5,6 +5,11 @@ import { EMPTY_STATE, chatReducer, parseChats } from './chat-state'
 const incoming = (id: string, chatId = '10'): Message => ({ id, chatId, text: 'привет', timestamp: 1, outgoing: false })
 
 describe('chatReducer', () => {
+  it('replaces the whole state', () => {
+    const next = { chats: [{ chatId: '10' }], messages: [incoming('m1')] }
+    expect(chatReducer(EMPTY_STATE, { type: 'stateReplaced', state: next })).toBe(next)
+  })
+
   it('creates a chat for a message from an unknown sender', () => {
     const state = chatReducer(EMPTY_STATE, { type: 'messageAdded', message: incoming('m1'), chatName: 'Иван' })
     expect(state.chats).toEqual([{ chatId: '10', name: 'Иван' }])
