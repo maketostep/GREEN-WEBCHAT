@@ -24,6 +24,16 @@ function patchMessage(messages: readonly Message[], id: string, patch: Partial<M
   return messages.map((m) => (m.id === id ? { ...m, ...patch } : m))
 }
 
+const isChat = (value: unknown): value is Chat =>
+  typeof value === 'object' && value !== null && typeof (value as Chat).chatId === 'string'
+
+const isMessage = (value: unknown): value is Message =>
+  typeof value === 'object' &&
+  value !== null &&
+  typeof (value as Message).id === 'string' &&
+  typeof (value as Message).chatId === 'string' &&
+  typeof (value as Message).text === 'string'
+
 export function chatReducer(state: ChatState, action: ChatAction): ChatState {
   switch (action.type) {
     case 'chatOpened':
@@ -49,8 +59,8 @@ export function parseChats(value: unknown): ChatState {
   const saved = value as Partial<ChatState> | null
   if (!saved || !Array.isArray(saved.chats) || !Array.isArray(saved.messages)) return EMPTY_STATE
   return {
-    chats: saved.chats,
-    messages: saved.messages.map((m: Message) =>
+    chats: saved.chats.filter(isChat),
+    messages: saved.messages.filter(isMessage).map((m: Message) =>
       m.status === 'pending' ? { ...m, status: 'failed', error: 'Отправка прервана' } : m,
     ),
   }

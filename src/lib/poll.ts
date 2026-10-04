@@ -6,11 +6,14 @@ const RETRY_DELAY_MS = 5000
 
 function wait(ms: number, signal: AbortSignal): Promise<void> {
   return new Promise((resolve) => {
-    const timer = setTimeout(resolve, ms)
-    signal.addEventListener('abort', () => {
+    const done = () => {
       clearTimeout(timer)
+      signal.removeEventListener('abort', done)
       resolve()
-    }, { once: true })
+    }
+    const timer = setTimeout(done, ms)
+    if (signal.aborted) done()
+    else signal.addEventListener('abort', done, { once: true })
   })
 }
 

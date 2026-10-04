@@ -50,4 +50,11 @@ describe('parseChats', () => {
     expect(parseChats(null)).toEqual(EMPTY_STATE)
     expect(parseChats({ chats: 'x' })).toEqual(EMPTY_STATE)
   })
+
+  it('drops broken entries and keeps the rest', () => {
+    expect(parseChats({ chats: [null, 5, { chatId: '10' }], messages: [null, { text: 1 }, incoming('m1')] })).toEqual({
+      chats: [{ chatId: '10' }],
+      messages: [incoming('m1')],
+    })
+  })
 })

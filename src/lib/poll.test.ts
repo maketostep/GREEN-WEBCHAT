@@ -52,10 +52,45 @@ describe('pollNotifications', () => {
     const onOnline = vi.fn()
 
     const polling = pollNotifications(creds, controller.signal, vi.fn(), onOnline)
-    await vi.advanceTimersByTimeAsync(5000)
+    await vi.advanceTimersByTimeAsync(4999)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    await vi.advanceTimersByTimeAsync(1)
     await polling
 
     expect(onOnline.mock.calls).toEqual([[false], [true]])
     expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('stays quiet when aborted during a request', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const controller = new AbortController()
+    const fetchMock = vi.fn((_url: string, init?: RequestInit) => new Promise<Response>((_, reject) => init?.signal?.addEventListener('abort', () => reject(new DOMException('This operation was aborted', 'AbortError')))))
+    vi.stubGlobal('fetch', fetchMock)
+    const onOnline = vi.fn()
+
+    const polling = pollNotifications(creds, controller.signal, vi.fn(), onOnline)
+    controller.abort()
+    await polling
+
+    expect(onOnline).not.toHaveBeenCalledWith(false)
+    expect(errorSpy).not.toHaveBeenCalled()
+  })
+
+  it('settles at once when aborted during the retry wait', async () => {
+    vi.useFakeTimers()
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const controller = new AbortController()
+    const fetchMock = vi.fn().mockRejectedValueOnce(new TypeError('Failed to fetch'))
+    vi.stubGlobal('fetch', fetchMock)
+    const onOnline = vi.fn()
+
+    const polling = pollNotifications(creds, controller.signal, vi.fn(), onOnline)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(vi.getTimerCount()).toBe(1)
+    controller.abort()
+    await polling
+
+    expect(vi.getTimerCount()).toBe(0)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 })
