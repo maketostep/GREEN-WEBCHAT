@@ -1,7 +1,7 @@
 import type { Credentials } from '../types'
 import { parseChats, type ChatState } from './chat-state'
 
-const CREDENTIALS_KEY = 'green-chat:credentials'
+export const CREDENTIALS_KEY = 'green-chat:credentials'
 export const chatsKey = (idInstance: string) => `green-chat:chats:${idInstance}`
 
 function read(key: string): unknown {

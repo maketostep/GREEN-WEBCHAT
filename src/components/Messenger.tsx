@@ -2,7 +2,7 @@ import { useEffect, useReducer, useState } from 'react'
 import { checkAccount, errorMessage, sendMessage } from '../api/green-api'
 import { useNotifications } from '../hooks/useNotifications'
 import { chatReducer } from '../lib/chat-state'
-import { chatsKey, loadChats, saveChats } from '../lib/storage'
+import { CREDENTIALS_KEY, chatsKey, loadChats, saveChats } from '../lib/storage'
 import type { Credentials, Message } from '../types'
 import { ChatPanel } from './ChatPanel'
 import { ReceivingNotice } from './ReceivingNotice'
@@ -24,13 +24,17 @@ export function Messenger({ credentials, onLogout }: Props) {
 
   useEffect(() => {
     const sync = (event: StorageEvent) => {
-      if (event.key === chatsKey(credentials.idInstance)) {
+      if (event.key === CREDENTIALS_KEY && event.newValue === null) {
+        onLogout()
+        return
+      }
+      if (event.key === chatsKey(credentials.idInstance) && event.newValue !== null) {
         dispatch({ type: 'stateReplaced', state: loadChats(credentials.idInstance) })
       }
     }
     window.addEventListener('storage', sync)
     return () => window.removeEventListener('storage', sync)
-  }, [credentials.idInstance])
+  }, [credentials.idInstance, onLogout])
 
   const openChat = async (phone: string) => {
     // Известные номера не перепроверяем, чтобы экономить квоту CheckAccount
