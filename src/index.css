@@ -10,7 +10,7 @@
   --color-tertiary: #06070885;
   --color-surface: #f5f7fa;
   --color-divider: #0c0d0e0f;
-  --color-negative: #ff303c;
+  --color-negative: #e0242f;
 
   --color-sky: #99d5d7;
   --color-sea: #80bcff;
@@ -21,10 +21,8 @@
   --color-bubble-out-time: #0784b8;
 }
 
-html,
-body,
 #root {
-  height: 100%;
+  height: 100dvh;
 }
 
 body {
