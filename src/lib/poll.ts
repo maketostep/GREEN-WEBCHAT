@@ -30,6 +30,7 @@ export async function pollNotifications(
       if (!notification) continue
       const message = parseIncomingText(notification.body)
       if (message) onMessage(message)
+      // Каждое уведомление нужно удалять, иначе очередь встанет на нём
       await deleteNotification(creds, notification.receiptId, signal)
     } catch (error) {
       if (signal.aborted) return

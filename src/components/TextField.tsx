@@ -12,7 +12,7 @@ export function TextField({ label, onChange, ...input }: Props) {
       <input
         {...input}
         onChange={(event) => onChange(event.target.value)}
-        className="h-11 w-full rounded-xl border border-divider bg-white px-3 outline-none transition-colors placeholder:text-tertiary focus:border-accent"
+        className="h-11 w-full rounded-xl border border-divider bg-white px-3 outline-hidden transition-colors placeholder:text-tertiary focus:border-accent"
       />
     </label>
   )

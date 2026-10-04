@@ -1,5 +1,6 @@
 function toInternational(digits: string): string {
   if (digits.length === 10 && digits.startsWith('9')) return `7${digits}`
+  if (digits.length === 11 && digits.startsWith('80')) return `375${digits.slice(2)}`
   if (digits.length === 11 && digits.startsWith('8')) return `7${digits.slice(1)}`
   return digits
 }

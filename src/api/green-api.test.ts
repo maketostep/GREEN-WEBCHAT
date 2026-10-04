@@ -93,11 +93,9 @@ describe('requests', () => {
   it('rejects with ApiError on non-OK response', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 401 })))
 
-    await expect(getStateInstance(creds)).rejects.toThrow(ApiError)
-    const error = await getStateInstance(creds).catch((e) => e)
+    const error: unknown = await getStateInstance(creds).catch((e: unknown) => e)
     expect(error).toBeInstanceOf(ApiError)
-    expect(error.status).toBe(401)
-    expect(error.message).toBe('Неверный idInstance или apiTokenInstance')
+    expect(error).toMatchObject({ status: 401, message: 'Неверный idInstance или apiTokenInstance' })
   })
 
   it('resolves to null for empty or null body', async () => {
