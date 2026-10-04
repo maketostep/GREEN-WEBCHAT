@@ -8,7 +8,7 @@ import {
 } from '../api/green-api'
 import type { Credentials } from '../types'
 
-type Status = ReceivingProblem | 'enabling' | 'enabled' | null
+type Status = ReceivingProblem | 'enabling' | 'enabled' | 'failed' | null
 
 interface Props {
   readonly credentials: Credentials
@@ -17,6 +17,7 @@ interface Props {
 export function ReceivingNotice({ credentials }: Props) {
   const [status, setStatus] = useState<Status>(null)
   const [error, setError] = useState('')
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     let active = true
@@ -24,11 +25,22 @@ export function ReceivingNotice({ credentials }: Props) {
       .then((settings) => {
         if (active) setStatus(receivingProblem(settings))
       })
-      .catch((caught: unknown) => console.error(caught))
+      .catch((caught: unknown) => {
+        if (active) {
+          setError(errorMessage(caught))
+          setStatus('failed')
+        }
+      })
     return () => {
       active = false
     }
-  }, [credentials])
+  }, [credentials, attempt])
+
+  const retry = () => {
+    setError('')
+    setStatus(null)
+    setAttempt((value) => value + 1)
+  }
 
   const enable = async () => {
     setStatus('enabling')
@@ -49,6 +61,15 @@ export function ReceivingNotice({ credentials }: Props) {
       {status === 'webhook' &&
         'В инстансе задан webhookUrl, и входящие сообщения уходят туда. Очистите его в личном кабинете GREEN-API.'}
       {status === 'enabled' && 'Приём входящих включён. GREEN-API применит настройку в течение 5 минут.'}
+      {status === 'failed' && (
+        <>
+          <p>Не удалось проверить настройки приёма входящих.</p>
+          <p className="mt-1 text-negative">{error}</p>
+          <button type="button" onClick={retry} className="mt-1.5 font-medium text-accent hover:underline">
+            Проверить снова
+          </button>
+        </>
+      )}
       {(status === 'disabled' || status === 'enabling') && (
         <>
           <p>Приём входящих сообщений выключен в настройках инстанса.</p>
