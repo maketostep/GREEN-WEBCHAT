@@ -20,6 +20,7 @@ export class ApiError extends Error {
 
 export function errorMessage(error: unknown): string {
   if (error instanceof TypeError) return 'Нет связи с GREEN-API. Проверьте apiUrl и интернет'
+  if (error instanceof SyntaxError) return 'Неожиданный ответ GREEN-API. Проверьте apiUrl'
   return error instanceof Error ? error.message : String(error)
 }
 
