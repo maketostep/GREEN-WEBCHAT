@@ -11,12 +11,14 @@ interface Props {
   readonly className: string
   readonly chat?: Chat
   readonly messages: readonly Message[]
+  readonly loadingHistory: boolean
+  readonly historyError: string | null
   readonly onSend: (text: string) => void
   readonly onRetry: (message: Message) => void
   readonly onBack: () => void
 }
 
-export function ChatPanel({ className, chat, messages, onSend, onRetry, onBack }: Props) {
+export function ChatPanel({ className, chat, messages, loadingHistory, historyError, onSend, onRetry, onBack }: Props) {
   return (
     <main className={`${className} min-w-0 flex-1 flex-col bg-linear-to-br from-sky to-sea`}>
       {chat ? (
@@ -29,7 +31,13 @@ export function ChatPanel({ className, chat, messages, onSend, onRetry, onBack }
               {chat.name && chat.phone && <p className="text-[13px] text-tertiary">{formatPhone(chat.phone)}</p>}
             </div>
           </header>
-          <MessageList key={`messages-${chat.chatId}`} messages={messages} onRetry={onRetry} />
+          <MessageList
+            key={`messages-${chat.chatId}`}
+            messages={messages}
+            loading={loadingHistory}
+            error={historyError}
+            onRetry={onRetry}
+          />
           <Composer key={chat.chatId} onSend={onSend} />
         </>
       ) : (

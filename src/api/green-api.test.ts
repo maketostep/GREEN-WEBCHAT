@@ -6,6 +6,8 @@ import {
   deriveApiUrl,
   enableIncomingWebhook,
   errorMessage,
+  getChatHistory,
+  getChats,
   getSettings,
   getStateInstance,
   receiveNotification,
@@ -35,7 +37,7 @@ describe('requests', () => {
     vi.unstubAllGlobals()
   })
 
-  it('calls all seven endpoints with correct URLs and methods', async () => {
+  it('calls all endpoints with correct URLs and methods', async () => {
     const fetchMock = vi.fn(async () => new Response('{}'))
     vi.stubGlobal('fetch', fetchMock)
 
@@ -74,6 +76,19 @@ describe('requests', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ chatId: '10000000', message: 'hi' }),
+      }),
+    )
+
+    await getChats(creds)
+    expect(fetchMock).toHaveBeenCalledWith('https://3100.api.green-api.com/waInstance3100000001/getChats/tok', {})
+
+    await getChatHistory(creds, '10000000')
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://3100.api.green-api.com/waInstance3100000001/getChatHistory/tok',
+      expect.objectContaining({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chatId: '10000000', count: 100 }),
       }),
     )
 

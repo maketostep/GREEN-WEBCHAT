@@ -88,3 +88,11 @@ export function receiveNotification(creds: Credentials, signal: AbortSignal): Pr
 export function deleteNotification(creds: Credentials, receiptId: number, signal: AbortSignal): Promise<{ result: boolean }> {
   return call(creds, 'deleteNotification', { method: 'DELETE', signal }, `/${receiptId}`)
 }
+
+export function getChats(creds: Credentials): Promise<unknown> {
+  return call(creds, 'getChats')
+}
+
+export function getChatHistory(creds: Credentials, chatId: string, count = 100): Promise<unknown> {
+  return post(creds, 'getChatHistory', { chatId, count })
+}

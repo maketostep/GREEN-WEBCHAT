@@ -40,8 +40,49 @@ describe('chatReducer', () => {
     expect(failed.messages[0]).toMatchObject({ status: 'failed', error: 'Ошибка' })
     const retried = chatReducer(failed, { type: 'messageRetried', id: 'local' })
     expect(retried.messages[0]?.status).toBe('pending')
-    const sent = chatReducer(retried, { type: 'messageSent', id: 'local' })
+    const sent = chatReducer(retried, { type: 'messageSent', id: 'local', idMessage: 'srv1' })
+    expect(sent.messages[0]).toMatchObject({ id: 'srv1' })
     expect(sent.messages[0]?.status).toBeUndefined()
+    expect(sent.messages[0]?.error).toBeUndefined()
+  })
+
+  it('drops the local copy when history already delivered the sent message', () => {
+    const pending: Message = { id: 'local', chatId: '10', text: 'hi', timestamp: 5, outgoing: true, status: 'pending' }
+    const fromHistory: Message = { id: 'srv1', chatId: '10', text: 'hi', timestamp: 5, outgoing: true }
+    const state = { chats: [{ chatId: '10' }], messages: [pending, fromHistory] }
+    const sent = chatReducer(state, { type: 'messageSent', id: 'local', idMessage: 'srv1' })
+    expect(sent.messages).toEqual([fromHistory])
+  })
+
+  it('fills empty chat fields from the server list and appends new chats', () => {
+    const state = { chats: [{ chatId: '10', name: 'Иван' }, { chatId: '20' }], messages: [] }
+    const next = chatReducer(state, {
+      type: 'chatsLoaded',
+      chats: [
+        { chatId: '30', name: 'Новый' },
+        { chatId: '20', name: 'Пётр', phone: '79990000000' },
+        { chatId: '10', name: 'Другой', phone: '79991234567' },
+      ],
+    })
+    expect(next.chats).toEqual([
+      { chatId: '10', name: 'Иван', phone: '79991234567' },
+      { chatId: '20', name: 'Пётр', phone: '79990000000' },
+      { chatId: '30', name: 'Новый' },
+    ])
+  })
+
+  it('merges history by id, sorts by time and leaves chats alone', () => {
+    const state = { chats: [{ chatId: '10' }, { chatId: '20' }], messages: [{ ...incoming('m2'), timestamp: 20 }] }
+    const next = chatReducer(state, {
+      type: 'historyLoaded',
+      messages: [
+        { ...incoming('m3'), timestamp: 30 },
+        { ...incoming('m2'), timestamp: 99 },
+        { ...incoming('m1'), timestamp: 10 },
+      ],
+    })
+    expect(next.messages.map((m) => [m.id, m.timestamp])).toEqual([['m1', 10], ['m2', 20], ['m3', 30]])
+    expect(next.chats).toBe(state.chats)
   })
 })
 

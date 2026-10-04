@@ -1,4 +1,5 @@
 import { chatTitle, formatListTime } from '../lib/format'
+import { formatPhone } from '../lib/phone'
 import type { Chat, Message } from '../types'
 import { Avatar } from './Avatar'
 
@@ -25,7 +26,7 @@ export function ChatListItem({ chat, lastMessage, active, onSelect }: Props) {
             {lastMessage && <time className="shrink-0 text-xs text-tertiary">{formatListTime(lastMessage.timestamp)}</time>}
           </span>
           <span className="block truncate text-[15px] text-secondary">
-            {lastMessage ? `${lastMessage.outgoing ? 'Вы: ' : ''}${lastMessage.text}` : 'Нет сообщений'}
+            {lastMessage ? `${lastMessage.outgoing ? 'Вы: ' : ''}${lastMessage.text}` : chat.phone ? formatPhone(chat.phone) : ''}
           </span>
         </span>
       </button>
