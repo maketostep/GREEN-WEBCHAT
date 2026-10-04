@@ -16,6 +16,11 @@ interface HistoryStatus {
 
 const IDLE: HistoryStatus = { loading: false, error: null }
 
+function serverId(response: unknown): string | null {
+  const id = typeof response === 'object' && response !== null ? (response as { idMessage?: unknown }).idMessage : null
+  return typeof id === 'string' && id !== '' ? id : null
+}
+
 const createLocalId = () => `local-${Date.now()}-${Math.random().toString(36).slice(2)}`
 
 interface Props {
@@ -84,8 +89,8 @@ export function Messenger({ credentials, onLogout }: Props) {
 
   const deliver = async (message: Message) => {
     try {
-      const { idMessage } = await sendMessage(credentials, message.chatId, message.text)
-      dispatch({ type: 'messageSent', id: message.id, idMessage })
+      const response = await sendMessage(credentials, message.chatId, message.text)
+      dispatch({ type: 'messageSent', id: message.id, idMessage: serverId(response) ?? message.id })
     } catch (error) {
       dispatch({ type: 'messageFailed', id: message.id, error: errorMessage(error) })
     }

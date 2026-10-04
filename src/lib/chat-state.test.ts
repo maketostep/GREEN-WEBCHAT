@@ -54,6 +54,20 @@ describe('chatReducer', () => {
     expect(sent.messages).toEqual([fromHistory])
   })
 
+  it('keeps the local id and message when the server id is the same', () => {
+    const pending: Message = { id: 'local', chatId: '10', text: 'hi', timestamp: 5, outgoing: true, status: 'pending' }
+    const sent = chatReducer({ chats: [], messages: [pending] }, { type: 'messageSent', id: 'local', idMessage: 'local' })
+    expect(sent.messages).toEqual([{ id: 'local', chatId: '10', text: 'hi', timestamp: 5, outgoing: true }])
+  })
+
+  it('replaces interrupted local sends with their copy from history', () => {
+    const failed: Message = { id: 'local', chatId: '10', text: 'hi', timestamp: 100000, outgoing: true, status: 'failed', error: 'Отправка прервана' }
+    const other: Message = { ...failed, id: 'other', text: 'другое' }
+    const copy: Message = { id: 'srv', chatId: '10', text: 'hi', timestamp: 130000, outgoing: true }
+    const next = chatReducer({ chats: [], messages: [failed, other] }, { type: 'historyLoaded', messages: [copy] })
+    expect(next.messages.map((m) => m.id)).toEqual(['other', 'srv'])
+  })
+
   it('fills empty chat fields from the server list and appends new chats', () => {
     const state = { chats: [{ chatId: '10', name: 'Иван' }, { chatId: '20' }], messages: [] }
     const next = chatReducer(state, {

@@ -32,7 +32,11 @@ export function loadChats(idInstance: string): ChatState {
 }
 
 export function saveChats(idInstance: string, state: ChatState): void {
-  localStorage.setItem(chatsKey(idInstance), JSON.stringify(state))
+  try {
+    localStorage.setItem(chatsKey(idInstance), JSON.stringify(state))
+  } catch (error) {
+    console.error(error)
+  }
 }
 
 export function clearSession(idInstance: string): void {

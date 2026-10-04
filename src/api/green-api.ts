@@ -72,7 +72,7 @@ export function checkAccount(creds: Credentials, phone: string): Promise<{ exist
   return post(creds, 'checkAccount', { phoneNumber: Number(phone) })
 }
 
-export function sendMessage(creds: Credentials, chatId: string, message: string): Promise<{ idMessage: string }> {
+export function sendMessage(creds: Credentials, chatId: string, message: string): Promise<unknown> {
   return post(creds, 'sendMessage', { chatId, message })
 }
 

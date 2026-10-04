@@ -32,6 +32,15 @@ function mergeChats(chats: readonly Chat[], loaded: readonly Chat[]): readonly C
   return [...filled, ...loaded.filter((l) => !known.has(l.chatId))]
 }
 
+const RECOVERY_WINDOW_MS = 60_000
+
+const isRecoveredByHistory = (local: Message, history: readonly Message[]): boolean =>
+  local.outgoing &&
+  local.status !== undefined &&
+  history.some(
+    (h) => h.outgoing && h.chatId === local.chatId && h.text === local.text && Math.abs(h.timestamp - local.timestamp) <= RECOVERY_WINDOW_MS,
+  )
+
 function patchMessage(messages: readonly Message[], id: string, patch: Partial<Message>): readonly Message[] {
   return messages.map((m) => (m.id === id ? { ...m, ...patch } : m))
 }
@@ -60,7 +69,7 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
     }
     case 'messageSent': {
       const { id, idMessage } = action
-      if (state.messages.some((m) => m.id === idMessage)) return { ...state, messages: state.messages.filter((m) => m.id !== id) }
+      if (idMessage !== id && state.messages.some((m) => m.id === idMessage)) return { ...state, messages: state.messages.filter((m) => m.id !== id) }
       return { ...state, messages: patchMessage(state.messages, id, { id: idMessage, status: undefined, error: undefined }) }
     }
     case 'chatsLoaded':
@@ -68,7 +77,8 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
     case 'historyLoaded': {
       const known = new Set(state.messages.map((m) => m.id))
       const fresh = action.messages.filter((m) => !known.has(m.id))
-      return { ...state, messages: [...state.messages, ...fresh].sort((a, b) => a.timestamp - b.timestamp) }
+      const kept = state.messages.filter((m) => !isRecoveredByHistory(m, fresh))
+      return { ...state, messages: [...kept, ...fresh].sort((a, b) => a.timestamp - b.timestamp) }
     }
     case 'messageFailed':
       return { ...state, messages: patchMessage(state.messages, action.id, { status: 'failed', error: action.error }) }
