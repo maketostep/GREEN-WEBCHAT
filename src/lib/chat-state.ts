@@ -36,7 +36,7 @@ const RECOVERY_WINDOW_MS = 60_000
 
 const isRecoveredByHistory = (local: Message, history: readonly Message[]): boolean =>
   local.outgoing &&
-  local.status !== undefined &&
+  local.status === 'failed' &&
   history.some(
     (h) => h.outgoing && h.chatId === local.chatId && h.text === local.text && Math.abs(h.timestamp - local.timestamp) <= RECOVERY_WINDOW_MS,
   )
