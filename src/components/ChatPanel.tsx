@@ -29,7 +29,7 @@ export function ChatPanel({ className, chat, messages, onSend, onRetry, onBack }
               {chat.name && chat.phone && <p className="text-[13px] text-tertiary">{formatPhone(chat.phone)}</p>}
             </div>
           </header>
-          <MessageList messages={messages} onRetry={onRetry} />
+          <MessageList key={`messages-${chat.chatId}`} messages={messages} onRetry={onRetry} />
           <Composer key={chat.chatId} onSend={onSend} />
         </>
       ) : (
