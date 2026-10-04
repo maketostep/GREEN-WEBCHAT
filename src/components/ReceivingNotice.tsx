@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
+  ApiError,
   enableIncomingWebhook,
   errorMessage,
   getSettings,
@@ -7,6 +8,9 @@ import {
   type ReceivingProblem,
 } from '../api/green-api'
 import type { Credentials } from '../types'
+
+const RATE_LIMIT_RETRY_MS = 2000
+const MAX_RATE_LIMIT_RETRIES = 3
 
 type Status = ReceivingProblem | 'enabling' | 'enabled' | 'failed' | null
 
@@ -21,18 +25,26 @@ export function ReceivingNotice({ credentials }: Props) {
 
   useEffect(() => {
     let active = true
-    getSettings(credentials)
-      .then((settings) => {
-        if (active) setStatus(receivingProblem(settings))
-      })
-      .catch((caught: unknown) => {
-        if (active) {
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const check = (retriesLeft: number) => {
+      getSettings(credentials)
+        .then((settings) => {
+          if (active) setStatus(receivingProblem(settings))
+        })
+        .catch((caught: unknown) => {
+          if (!active) return
+          if (caught instanceof ApiError && caught.status === 429 && retriesLeft > 0) {
+            timer = setTimeout(() => check(retriesLeft - 1), RATE_LIMIT_RETRY_MS)
+            return
+          }
           setError(errorMessage(caught))
           setStatus('failed')
-        }
-      })
+        })
+    }
+    check(MAX_RATE_LIMIT_RETRIES)
     return () => {
       active = false
+      clearTimeout(timer)
     }
   }, [credentials, attempt])
 
@@ -60,7 +72,7 @@ export function ReceivingNotice({ credentials }: Props) {
     <div role="status" className="mx-3 mb-2 rounded-xl bg-accent/10 px-3 py-2 text-[13px]">
       {status === 'webhook' &&
         'В инстансе задан webhookUrl, и входящие сообщения уходят туда. Очистите его в личном кабинете GREEN-API.'}
-      {status === 'enabled' && 'Приём входящих включён. GREEN-API применит настройку в течение 5 минут.'}
+      {status === 'enabled' && 'Приём входящих включён. Инстанс перезапустится, настройка заработает в течение 5 минут.'}
       {status === 'failed' && (
         <>
           <p>Не удалось проверить настройки приёма входящих.</p>
